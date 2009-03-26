@@ -1,0 +1,122 @@
+django-heroism
+
+Nomenclature
+------------
+
+Please pardon the name. HEROISM is an (admittedly somewhat forced) acronym for:
+
+    Header Explicates Request Object's is_secure Method
+
+I was so happy when I found a working solution to this problem, that I indeed
+viewed this little app as a hero. What problem? you ask? Read on, dear friend.
+
+The Problem
+-----------
+
+django-heroism applies to this use case:
+
+ * you need to use secure (HTTPS) pages on your Django-powered site, AND
+ * you proxy Django requests from a "front-end server" (e.g. nginx) to a
+   "back-end server" (e.g. Apache)
+
+The problem with this setup is that Django doesn't know if the request was
+secure or not, because the request does not get propagated from the
+front-end server to the back-end server using its original schema.
+
+For example, a secure request probably looks like this:
+
+   Browser  <=== HTTPS ===>  nginx  <=== HTTP ===>  Apache
+
+and an insecure request probably looks like this:
+
+   Browser  <=== HTTP ===>  nginx  <=== HTTP ===>  Apache
+
+By the time the request hits Apache, it's _always_ using HTTP (unless you host
+your front-end server and back-end servers on different networks, in which case
+you might want to secure the connection between them, and the request would
+appear to _always_ be HTTPS).
+
+As the programmer of a secure website, you will likely find this problematic.
+
+The Remedy
+----------
+
+django-heroism solves this problem by passing along an extra header from the
+front-end server to the back-end server, explicating whether or not the
+connection is secure, like this:
+
+   Browser  <=== HTTPS ===>  nginx  <=== HTTP ===>  Apache
+                                    < new_header >
+
+More accurately, django-heroism _detects_ the header and uses it to tell Django
+whether the original request was secure or insecure, by overriding the
+request method's is_secure() method. You must setup this new header yourself.
+
+Justification
+-------------
+
+Other implementation options exist, but they may vary depending on your
+specific deployment setup (mod-wsgi, vs. mod-python, vs. *.cgi, etc.).
+
+I chose this method because it is fairly deployment-agnostic; all web servers
+understand headers and typically let you customize them fairly painlessly.
+Having said that, be sure to read the installation instructions.
+
+
+Installation
+------------
+
+1) Add the django-heroism app to your PYTHONPATH.
+
+2) Add the HeroismMiddleware to your list of middleware, ideally near the top
+   so that other middleware can rely on request.is_secure() being accurate:
+
+   MIDDLEWARE_CLASSES = (
+       'django-heroism.middleware.HeroismMiddleware',
+       ...
+   )
+
+3) Adjust the header name/value defaults in django-heroism/heroism/__init__.py
+   if you don't like them.
+
+4) Configure your front-end server to send along the new header. Please see
+   django-heroism/nginx-conf-sample for an example (NOT a drag-n-drop example
+   though; make sure you have a thorough knowledge of your deployment config).
+   Pay particular attention to the following line in mysite.conf:
+
+      proxy_set_header  X-Forwarded-Protocol  "https";
+
+   You could choose to define this with a value of "http" in your port 80 block
+   or simply not send the header for insecure requests and let the middleware
+   default to insecure.
+
+
+Django Dev Server
+-----------------
+
+django-heroism should work just fine with the Django development server, since
+it will default to insecure, and the dev server doesn't speak HTTPS anyway.
+
+
+Acknowledgements
+----------------
+
+I derived this idea from the seemingly de-facto solution to the Rails
+equivalent to this problem. I forget where I first read about it, but if your
+blog is on the first page of Google results for some combination of the terms:
+
+   (nginx, apache, proxy, https, secure, french toast in palo alto open late)
+
+then I probably stumbled upon it; many thanks! Maybe some day we can get a
+version of this worked into Django core or contrib, as it is in Rails.
+
+
+The Future
+----------
+
+I would love to get a better version of this worked into core or contrib if
+there's enough interest (and there should be, because the two-server proxy
+technique seems quite popular, and because everyone _should_ be using
+SECURE_COOKIES = True, right? right?).
+
+Plus it's built in to rails. Snap.

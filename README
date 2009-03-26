@@ -62,7 +62,6 @@ I chose this method because it is fairly deployment-agnostic; all web servers
 understand headers and typically let you customize them fairly painlessly.
 Having said that, be sure to read the installation instructions.
 
-
 Installation
 ------------
 
@@ -90,13 +89,11 @@ Installation
    or simply not send the header for insecure requests and let the middleware
    default to insecure.
 
-
 Django Dev Server
 -----------------
 
 django-heroism should work just fine with the Django development server, since
 it will default to insecure, and the dev server doesn't speak HTTPS anyway.
-
 
 Acknowledgements
 ----------------
@@ -110,13 +107,10 @@ blog is on the first page of Google results for some combination of the terms:
 then I probably stumbled upon it; many thanks! Maybe some day we can get a
 version of this worked into Django core or contrib, as it is in Rails.
 
-
 The Future
 ----------
 
 I would love to get a better version of this worked into core or contrib if
 there's enough interest (and there should be, because the two-server proxy
 technique seems quite popular, and because everyone _should_ be using
-SECURE_COOKIES = True, right? right?).
-
-Plus it's built in to rails. Snap.
+SECURE_COOKIES = True, right? right?). Plus it's built in to Rails.

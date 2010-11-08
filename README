@@ -71,7 +71,7 @@ Installation
    so that other middleware can rely on request.is_secure() being accurate:
 
    MIDDLEWARE_CLASSES = (
-       'django-heroism.middleware.HeroismMiddleware',
+       'heroism.middleware.HeroismMiddleware',
        ...
    )
 
